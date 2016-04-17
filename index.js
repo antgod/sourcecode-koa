@@ -24,6 +24,11 @@ var request3=function(){
     })
 };
 
+app.use(function *(next){
+    console.log('before error:',this.status,this.error);
+    yield next;
+    console.log('after error:',this.status,this.error);
+});
 
 
 //before
@@ -33,13 +38,15 @@ app.use(function *(next){
     this.body=res;
     yield next;
     var ms = new Date - start;
-    console.log(ms);
+    console.log('before',ms);
+    //console.log(Object.keys(this.res))
 });
 
 //context
 app.use(function *(next){
     var res=yield request2();
     this.body +=res;
+    console.log('context');
     yield next;
 });
 
@@ -48,6 +55,7 @@ app.use(function *(next){
     var res=yield request3();
     this.body +=res;
     yield next;
+    console.log('after');
 });
 
 app.listen(3001);
