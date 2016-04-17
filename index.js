@@ -44,10 +44,14 @@ app.use(function *(next){
 
 //context
 app.use(function *(next){
-    var res=yield request2();
-    this.body +=res;
-    console.log('context');
-    yield next;
+    try{
+        var res=yield request2();
+        this.body +=res;
+        console.log('context');
+        yield next;
+    }catch (e){
+        console.log('abcedefasdfda',e.stack);
+    }
 });
 
 //after
