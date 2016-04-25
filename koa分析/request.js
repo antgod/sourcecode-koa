@@ -25,7 +25,7 @@ module.exports = {
    * @api public
    */
 
-  get header() {
+  get header() {         //获得req对象的报文头信息
     return this.req.headers;
   },
 
@@ -36,7 +36,7 @@ module.exports = {
    * @api public
    */
 
-  get headers() {
+  get headers() {        //获得req对象的报文头信息
     return this.req.headers;
   },
 
