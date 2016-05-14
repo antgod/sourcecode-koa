@@ -42,15 +42,14 @@ module.exports = Application;
  */
 
 function Application() {
-  debugger;
   if (!(this instanceof Application)) return new Application;      //如果this不是Application对象,也就是直接调用,那么重新实例化一份koa对象
   this.env = process.env.NODE_ENV || 'development';                //设置环境变量
-  this.subdomainOffset = 2;
-  this.middleware = [];
-  this.proxy = false;
-  this.context = Object.create(context);
-  this.request = Object.create(request);
-  this.response = Object.create(response);
+  this.subdomainOffset = 2;                                        //默认为2，表示 .subdomains 所忽略的字符偏移量。
+  this.middleware = [];                                            //中间件列表
+  this.proxy = false;                                              //代理
+  this.context = Object.create(context);                           //上下文对象
+  this.request = Object.create(request);                           //请求对象
+  this.response = Object.create(response);                         //响应对象
 }
 
 /**
@@ -60,7 +59,7 @@ function Application() {
 Object.setPrototypeOf(Application.prototype, Emitter.prototype);
 
 /**
- * Shorthand for:
+ * Shorthand for:                                          //简写为
  *
  *    http.createServer(app.callback()).listen(...)
  *
@@ -69,10 +68,10 @@ Object.setPrototypeOf(Application.prototype, Emitter.prototype);
  * @api public
  */
 
-app.listen = function(){
+app.listen = function(){                                          //监听函数
   debug('listen');
-  var server = http.createServer(this.callback());
-  return server.listen.apply(server, arguments);
+  var server = http.createServer(this.callback());                //把当前回调当做requestListeners传入createServer
+  return server.listen.apply(server, arguments);                  //调用server监听函数
 };
 
 /**
@@ -84,7 +83,7 @@ app.listen = function(){
  */
 
 app.inspect =
-app.toJSON = function(){
+app.toJSON = function(){                                           //toJSON后,只需要这些属性
   return only(this, [
     'subdomainOffset',
     'proxy',
@@ -101,13 +100,14 @@ app.toJSON = function(){
  */
 
 app.use = function(fn){
-  if (!this.experimental) {
+  if (!this.experimental) {                            //如果不是es7 async写法
     // es7 async functions are not allowed,
     // so we have to make sure that `fn` is a generator function
+    //判断是否是GeneratorFunction
     assert(fn && 'GeneratorFunction' == fn.constructor.name, 'app.use() requires a generator function');
   }
   debug('use %s', fn._name || fn.name || '-');
-  this.middleware.push(fn);
+  this.middleware.push(fn);       //添加中间件
   return this;
 };
 
@@ -120,22 +120,23 @@ app.use = function(fn){
  */
 
 app.callback = function(){
-  if (this.experimental) {
-    console.error('Experimental ES7 Async Function support is deprecated. Please look into Koa v2 as the middleware signature has changed.')
+  if (this.experimental) {                      //没有实现特性,没有es7函数特征
+    console.error('Experimental ES7 Async Function support is deprecated. Please look into ' +
+        'Koa v2 as the middleware signature has changed.')
   }
-  var fn = this.experimental
+  var fn = this.experimental                    //执行中间件函数
     ? compose_es7(this.middleware)
     : co.wrap(compose(this.middleware));
   var self = this;
 
   if (!this.listeners('error').length) this.on('error', this.onerror);
 
-  return function(req, res){
-    res.statusCode = 404;
-    var ctx = self.createContext(req, res);
-    onFinished(res, ctx.onerror);
+  return function(req, res){                    //如果没有绑定事件
+    res.statusCode = 404;                       //返回404
+    var ctx = self.createContext(req, res);     //创建上下文对象
+    onFinished(res, ctx.onerror);               //执行finished,关闭socket
     fn.call(ctx).then(function () {
-      respond.call(ctx);
+      respond.call(ctx);                        //执行respond回调
     }).catch(ctx.onerror);
   }
 };
@@ -147,22 +148,33 @@ app.callback = function(){
  */
 
 app.createContext = function(req, res){
-  var context = Object.create(this.context);
+  var context = Object.create(this.context);             //获得当前上下文对象
   var request = context.request = Object.create(this.request);
   var response = context.response = Object.create(this.response);
+  //context={
+  //  context.app = request.app = response.app = this;
+  //  context.req = request.req = response.req = req;
+  //  context.res = request.res = response.res = res;
+  //  request.ctx = response.ctx = context;
+  //  request.response = response;
+  //  response.request = request;
+  //}
+
+  //this.app=request.app,this.request=request
   context.app = request.app = response.app = this;
   context.req = request.req = response.req = req;
   context.res = request.res = response.res = res;
   request.ctx = response.ctx = context;
   request.response = response;
   response.request = request;
-  context.onerror = context.onerror.bind(context);
-  context.originalUrl = request.originalUrl = req.url;
-  context.cookies = new Cookies(req, res, {
+
+  context.onerror = context.onerror.bind(context);        //执行错误回调
+  context.originalUrl = request.originalUrl = req.url;    //原始url
+  context.cookies = new Cookies(req, res, {               //获得cookies,赋值给context.cookies与res
     keys: this.keys,
     secure: request.secure
   });
-  context.accept = request.accept = accepts(req);
+  context.accept = request.accept = accepts(req);         //赋值请求允许mine类型,赋给context
   context.state = {};
   return context;
 };
@@ -175,16 +187,16 @@ app.createContext = function(req, res){
  */
 
 app.onerror = function(err){
-  assert(err instanceof Error, 'non-error thrown: ' + err);
+  assert(err instanceof Error, 'non-error thrown: ' + err);  //如果有异常,必须是error实例
 
-  if (404 == err.status || err.expose) return;
+  if (404 == err.status || err.expose) return;               //如果404,直接return
   if (this.silent) return;
   // DEPRECATE env-specific logging in v2
-  if ('test' == this.env) return;
+  if ('test' == this.env) return;                            //如果是test环境,退出
 
   var msg = err.stack || err.toString();
   console.error();
-  console.error(msg.replace(/^/gm, '  '));
+  console.error(msg.replace(/^/gm, '  '));                   //缩进,打印堆栈信息
   console.error();
 };
 
@@ -194,7 +206,7 @@ app.onerror = function(err){
 
 function respond() {
   // allow bypassing koa
-  if (false === this.respond) return;
+  if (false === this.respond) return;                        //如果已经有返回
 
   var res = this.res;
   if (res.headersSent || !this.writable) return;

@@ -49,6 +49,7 @@ app.env='dev';
 
 //context
 app.use(function *(next){
+    console.log(this.req.headers)
     this.body='abc';
 });
 
