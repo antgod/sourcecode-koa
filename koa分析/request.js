@@ -47,7 +47,7 @@ module.exports = {
    * @api public
    */
 
-  get url() {
+  get url() {            //获得url
     return this.req.url;
   },
 
@@ -57,7 +57,7 @@ module.exports = {
    * @api public
    */
 
-  set url(val) {
+  set url(val) {          //设置url
     this.req.url = val;
   },
 
@@ -68,7 +68,7 @@ module.exports = {
    * @api public
    */
 
-  get origin() {
+  get origin() {           //获得方法+域
     return this.protocol + '://' + this.host;
   },
 
@@ -79,7 +79,7 @@ module.exports = {
    * @api public
    */
 
-  get href() {
+  get href() {                  //获得完整请求url
     // support: `GET http://example.com/foo`
     if (/^https?:\/\//i.test(this.originalUrl)) {
       return this.originalUrl;
@@ -94,7 +94,7 @@ module.exports = {
    * @api public
    */
 
-  get method() {
+  get method() {                 //获得请求方法
     return this.req.method;
   },
 
@@ -105,7 +105,7 @@ module.exports = {
    * @api public
    */
 
-  set method(val) {
+  set method(val) {               //设置请求方法
     this.req.method = val;
   },
 
@@ -116,7 +116,7 @@ module.exports = {
    * @api public
    */
 
-  get path() {
+  get path() {                     //获得path
     return parse(this.req).pathname;
   },
 
@@ -127,7 +127,7 @@ module.exports = {
    * @api public
    */
 
-  set path(path) {
+  set path(path) {                 //设置path
     var url = parse(this.req);
     if (url.pathname === path) return;
 
@@ -144,7 +144,7 @@ module.exports = {
    * @api public
    */
 
-  get query() {
+  get query() {                     //获得查询字符串,json格式
     var str = this.querystring;
     var c = this._querycache = this._querycache || {};
     return c[str] || (c[str] = qs.parse(str));
@@ -157,7 +157,7 @@ module.exports = {
    * @api public
    */
 
-  set query(obj) {
+  set query(obj) {                  //设置查询字符串
     this.querystring = qs.stringify(obj);
   },
 
@@ -168,7 +168,7 @@ module.exports = {
    * @api public
    */
 
-  get querystring() {
+  get querystring() {                //获得查询字符串,json格式
     if (!this.req) return '';
     return parse(this.req).query || '';
   },
@@ -180,7 +180,7 @@ module.exports = {
    * @api public
    */
 
-  set querystring(str) {
+  set querystring(str) {            //设置查询字符串
     var url = parse(this.req);
     if (url.search === '?' + str) return;
 
@@ -198,7 +198,7 @@ module.exports = {
    * @api public
    */
 
-  get search() {
+  get search() {                    //获得查询字符串,string格式
     if (!this.querystring) return '';
     return '?' + this.querystring;
   },
@@ -211,7 +211,7 @@ module.exports = {
    * @api public
    */
 
-  set search(str) {
+  set search(str) {                 //设置查询字符串
     this.querystring = str;
   },
 
@@ -225,9 +225,9 @@ module.exports = {
    */
 
   get host() {
-    var proxy = this.app.proxy;
+    var proxy = this.app.proxy;          //获得代理host
     var host = proxy && this.get('X-Forwarded-Host');
-    host = host || this.get('Host');
+    host = host || this.get('Host');     //获得host
     if (!host) return '';
     return host.split(/\s*,\s*/)[0];
   },
@@ -241,7 +241,7 @@ module.exports = {
    * @api public
    */
 
-  get hostname() {
+  get hostname() {                      //设置host
     var host = this.host;
     if (!host) return '';
     return host.split(':')[0];
@@ -376,7 +376,7 @@ module.exports = {
    * @api public
    */
 
-  get ip() {
+  get ip() {                            //获得ip
     return this.ips[0] || this.socket.remoteAddress || '';
   },
 
@@ -464,7 +464,7 @@ module.exports = {
    * @api public
    */
 
-  accepts: function(){
+  accepts: function(){                       //允许文件类型
     return this.accept.types.apply(this.accept, arguments);
   },
 
@@ -481,7 +481,7 @@ module.exports = {
    * @api public
    */
 
-  acceptsEncodings: function(){
+  acceptsEncodings: function(){           //允许压缩格式
     return this.accept.encodings.apply(this.accept, arguments);
   },
 
@@ -498,7 +498,7 @@ module.exports = {
    * @api public
    */
 
-  acceptsCharsets: function(){
+  acceptsCharsets: function(){             //允许编码格式
     return this.accept.charsets.apply(this.accept, arguments);
   },
 
@@ -515,7 +515,7 @@ module.exports = {
    * @api public
    */
 
-  acceptsLanguages: function(){
+  acceptsLanguages: function(){           //允许语言
     return this.accept.languages.apply(this.accept, arguments);
   },
 
@@ -545,7 +545,7 @@ module.exports = {
    * @api public
    */
 
-  is: function(types){
+  is: function(types){                       //如果请求类型包括指定类型
     if (!types) return typeis(this.req);
     if (!Array.isArray(types)) types = [].slice.call(arguments);
     return typeis(this.req, types);
@@ -559,7 +559,7 @@ module.exports = {
    * @api public
    */
 
-  get type() {
+  get type() {                           //获得请求类型
     var type = this.get('Content-Type');
     if (!type) return '';
     return type.split(';')[0];
@@ -587,7 +587,7 @@ module.exports = {
    * @api public
    */
 
-  get: function(field){
+  get: function(field){              //获得header字段
     var req = this.req;
     switch (field = field.toLowerCase()) {
       case 'referer':
@@ -605,7 +605,7 @@ module.exports = {
    * @api public
    */
 
-  inspect: function(){
+  inspect: function(){          //不解释
     if (!this.req) return;
     return this.toJSON();
   },
@@ -617,7 +617,7 @@ module.exports = {
    * @api public
    */
 
-  toJSON: function(){
+  toJSON: function(){            //不解释
     return {
       method: this.method,
       url: this.url,

@@ -25,7 +25,7 @@ var proto = module.exports = {
    */
 
   inspect: function(){
-    return this.toJSON();
+    return this.toJSON();  //返回request.response.app,req,res,url,socket
   },
 
   /**
@@ -41,14 +41,14 @@ var proto = module.exports = {
    */
 
   toJSON: function(){
-    return {
+    return {                             //序列化调用时候,返回这些参数
       request: this.request.toJSON(),
       response: this.response.toJSON(),
       app: this.app.toJSON(),
-      originalUrl: this.originalUrl,
-      req: '<original node req>',
+      originalUrl: this.originalUrl,     //url
+      req: '<original node req>',        //原生node req
       res: '<original node res>',
-      socket: '<original node socket>',
+      socket: '<original node socket>'
     }
   },
 
@@ -65,7 +65,7 @@ var proto = module.exports = {
    * @api public
    */
 
-  assert: httpAssert,
+  assert: httpAssert,                   //断言
 
   /**
    * Throw an error with `msg` and optional `status`
@@ -87,7 +87,7 @@ var proto = module.exports = {
    * @api public
    */
 
-  throw: function(){
+  throw: function(){                 //抛出异常
     throw createError.apply(null, arguments);
   },
 
@@ -98,44 +98,46 @@ var proto = module.exports = {
    * @api private
    */
 
-  onerror: function(err){
+  onerror: function(err){            //错误处理
     // don't do anything if there is no error.
     // this allows you to pass `this.onerror`
     // to node-style callbacks.
-    if (null == err) return;
+    if (null == err) return;          //如果没有错误不做任何事
 
+    //如果传入类型不是Error,抛出一个新异常
     if (!(err instanceof Error)) err = new Error('non-error thrown: ' + err);
 
     // delegate
-    this.app.emit('error', err, this);
+    this.app.emit('error', err, this);  //调用application的onerror方法发射error事件
 
     // nothing we can do here other
     // than delegate to the app-level
     // handler and log.
-    if (this.headerSent || !this.writable) {
+    if (this.headerSent || !this.writable) {     //这里我们可以处理app级别处理和日志
       err.headerSent = true;
       return;
     }
 
-    // unset all headers, and set those specified
+    // unset all headers, and set those specified  //如果没有设置headers,则指定设置
     this.res._headers = {};
     this.set(err.headers);
 
     // force text/plain
-    this.type = 'text';
+    this.type = 'text';                            //强制设置返回文本
 
     // ENOENT support
-    if ('ENOENT' == err.code) err.status = 404;
+    if ('ENOENT' == err.code) err.status = 404;    //如果错误码是 ENOENT,返回404状态
 
     // default to 500
+    //如果没有异常码,返回500
     if ('number' != typeof err.status || !statuses[err.status]) err.status = 500;
 
     // respond
-    var code = statuses[err.status];
-    var msg = err.expose ? err.message : code;
-    this.status = err.status;
-    this.length = Buffer.byteLength(msg);
-    this.res.end(msg);
+    var code = statuses[err.status];              //返回状态码
+    var msg = err.expose ? err.message : code;    //设置返回信息
+    this.status = err.status;                     //设置异常码
+    this.length = Buffer.byteLength(msg);         //设置返回信息长度
+    this.res.end(msg);                            //返回异常,打印到页面
   }
 };
 
@@ -143,7 +145,7 @@ var proto = module.exports = {
  * Response delegation.
  */
 
-delegate(proto, 'response')
+delegate(proto, 'response')            //response上面的方法赋给context
   .method('attachment')
   .method('redirect')
   .method('remove')
@@ -164,7 +166,7 @@ delegate(proto, 'response')
  * Request delegation.
  */
 
-delegate(proto, 'request')
+delegate(proto, 'request')             //request上面的方法赋给context
   .method('acceptsLanguages')
   .method('acceptsEncodings')
   .method('acceptsCharsets')
