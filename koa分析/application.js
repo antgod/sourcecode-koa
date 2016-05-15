@@ -100,14 +100,14 @@ app.toJSON = function(){                                           //toJSON后,�
  */
 
 app.use = function(fn){
-  if (!this.experimental) {                            //如果不是es7 async写法
+  if (!this.experimental) {                             //如果不是es7 async写法
     // es7 async functions are not allowed,
     // so we have to make sure that `fn` is a generator function
     //判断是否是GeneratorFunction
     assert(fn && 'GeneratorFunction' == fn.constructor.name, 'app.use() requires a generator function');
   }
   debug('use %s', fn._name || fn.name || '-');
-  this.middleware.push(fn);       //添加中间件
+  this.middleware.push(fn);                             //添加中间件
   return this;
 };
 
@@ -124,7 +124,7 @@ app.callback = function(){
     console.error('Experimental ES7 Async Function support is deprecated. Please look into ' +
         'Koa v2 as the middleware signature has changed.')
   }
-  var fn = this.experimental                    //执行中间件函数
+  var fn = this.experimental                    //返回中间件包装promise,具体见ecmascript/es7/co
     ? compose_es7(this.middleware)
     : co.wrap(compose(this.middleware));
   var self = this;
@@ -135,7 +135,7 @@ app.callback = function(){
     res.statusCode = 404;                       //返回404
     var ctx = self.createContext(req, res);     //创建上下文对象
     onFinished(res, ctx.onerror);               //执行finished,关闭socket
-    fn.call(ctx).then(function () {
+    fn.call(ctx).then(function () {             //把当前作用域上下文传递给中间件,执行中间件
       respond.call(ctx);                        //执行respond回调
     }).catch(ctx.onerror);
   }
@@ -206,41 +206,41 @@ app.onerror = function(err){
 
 function respond() {
   // allow bypassing koa
-  if (false === this.respond) return;                        //如果已经有返回
+  if (false === this.respond) return;                 //可以绕过koa执行函数
 
   var res = this.res;
-  if (res.headersSent || !this.writable) return;
+  if (res.headersSent || !this.writable) return;      //如果只发送头部,或者不可写,退出
 
   var body = this.body;
   var code = this.status;
 
   // ignore body
-  if (statuses.empty[code]) {
+  if (statuses.empty[code]) {                         //如果返回状态吗是204,205,304,退出
     // strip headers
     this.body = null;
     return res.end();
   }
 
-  if ('HEAD' == this.method) {
+  if ('HEAD' == this.method) {                        //如果类型是Head
     if (isJSON(body)) this.length = Buffer.byteLength(JSON.stringify(body));
     return res.end();
   }
 
   // status body
-  if (null == body) {
+  if (null == body) {                                 //如果请求体是null
     this.type = 'text';
-    body = this.message || String(code);
+    body = this.message || String(code);              //打出状态码和请求体
     this.length = Buffer.byteLength(body);
     return res.end(body);
   }
 
   // responses
-  if (Buffer.isBuffer(body)) return res.end(body);
-  if ('string' == typeof body) return res.end(body);
-  if (body instanceof Stream) return body.pipe(res);
+  if (Buffer.isBuffer(body)) return res.end(body);         //如果是二进制
+  if ('string' == typeof body) return res.end(body);       //如果是文字
+  if (body instanceof Stream) return body.pipe(res);       //如果是流,直接流入response
 
   // body: json
-  body = JSON.stringify(body);
+  body = JSON.stringify(body);                             //如果是json,返回string
   this.length = Buffer.byteLength(body);
-  res.end(body);
+  res.end(body);                                           //返回body
 }
