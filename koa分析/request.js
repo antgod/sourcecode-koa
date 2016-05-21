@@ -328,7 +328,7 @@ module.exports = {
    * @api public
    */
 
-  get length() {
+  get length() {                                                             //获得请求内容长度
     var len = this.get('Content-Length');
     if (len == '') return;
     return ~~len;
@@ -348,8 +348,8 @@ module.exports = {
 
   get protocol() {
     var proxy = this.app.proxy;
-    if (this.socket.encrypted) return 'https';
-    if (!proxy) return 'http';
+    if (this.socket.encrypted) return 'https';       //如果套接字被加密,返回https
+    if (!proxy) return 'http';                       //如果没有代理服务器,返回http
     var proto = this.get('X-Forwarded-Proto') || 'http';
     return proto.split(/\s*,\s*/)[0];
   },
@@ -363,7 +363,7 @@ module.exports = {
    * @api public
    */
 
-  get secure() {
+  get secure() {                         //返回方案是否安全
     return 'https' == this.protocol;
   },
 
@@ -392,7 +392,8 @@ module.exports = {
    * @api public
    */
 
-  get ips() {
+  get ips() {                               //返回上上游到下游的所有ip
+    //X-Forwarded-For: client1, proxy1, proxy2, proxy3:获得所有请求地址,包括代理
     var proxy = this.app.proxy;
     var val = this.get('X-Forwarded-For');
     return proxy && val
@@ -415,6 +416,8 @@ module.exports = {
    * @api public
    */
 
+  //获得子域名,比如"tobi.ferrets.example.com",如果没有设置 app.subdomainOffset，其 subdomains 为 ["ferrets", "tobi"]。
+  // 如果设置 app.subdomainOffset 为3，其 subdomains 为 ["tobi"]。
   get subdomains() {
     var offset = this.app.subdomainOffset;
     return (this.host || '')

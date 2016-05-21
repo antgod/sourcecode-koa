@@ -32,7 +32,7 @@ module.exports = {
    * @api public
    */
 
-  get socket() {
+  get socket() {                                       //获得返回套接字
     return this.ctx.req.socket;
   },
 
@@ -43,7 +43,7 @@ module.exports = {
    * @api public
    */
 
-  get header() {
+  get header() {                                        //获得返回header
     return this.res._headers || {};
   },
 
@@ -54,7 +54,7 @@ module.exports = {
    * @api public
    */
 
-  get headers() {
+  get headers() {                                        //同上
     return this.header;
   },
 
@@ -65,7 +65,7 @@ module.exports = {
    * @api public
    */
 
-  get status() {
+  get status() {                                         //获得返回状态码
     return this.res.statusCode;
   },
 
@@ -76,13 +76,13 @@ module.exports = {
    * @api public
    */
 
-  set status(code) {
+  set status(code) {                                      //设置状态
     assert('number' == typeof code, 'status code must be a number');
     assert(statuses[code], 'invalid status code: ' + code);
-    this._explicitStatus = true;
+    this._explicitStatus = true;                          //设置明确状态码
     this.res.statusCode = code;
     this.res.statusMessage = statuses[code];
-    if (this.body && statuses.empty[code]) this.body = null;
+    if (this.body && statuses.empty[code]) this.body = null;  //如果没有正确的设置状态码,返回体为null
   },
 
   /**
@@ -92,7 +92,7 @@ module.exports = {
    * @api public
    */
 
-  get message() {
+  get message() {                                        //获得异常信息
     return this.res.statusMessage || statuses[this.status];
   },
 
@@ -103,7 +103,7 @@ module.exports = {
    * @api public
    */
 
-  set message(msg) {
+  set message(msg) {                                      //设置异常信息
     this.res.statusMessage = msg;
   },
 
@@ -114,7 +114,7 @@ module.exports = {
    * @api public
    */
 
-  get body() {
+  get body() {                                            //获得返回体
     return this._body;
   },
 
@@ -127,10 +127,10 @@ module.exports = {
 
   set body(val) {
     var original = this._body;
-    this._body = val;
+    this._body = val;               //设置_body
 
     // no content
-    if (null == val) {
+    if (null == val) {              //如果没有内容null,undefined,返回204,移除Content-Type,Content-Length,Transfer-Encoding
       if (!statuses.empty[this.status]) this.status = 204;
       this.remove('Content-Type');
       this.remove('Content-Length');
@@ -139,38 +139,38 @@ module.exports = {
     }
 
     // set the status
-    if (!this._explicitStatus) this.status = 200;
+    if (!this._explicitStatus) this.status = 200;    //如果没有明确返回码,返回200
 
     // set the content-type only if not yet set
-    var setType = !this.header['content-type'];
+    var setType = !this.header['content-type'];      //如果没有设置content-type
 
     // string
-    if ('string' == typeof val) {
-      if (setType) this.type = /^\s*</.test(val) ? 'html' : 'text';
+    if ('string' == typeof val) {                    //如果返回字符串
+      if (setType) this.type = /^\s*</.test(val) ? 'html' : 'text';           //如果有</,返回html,所以返回的内容如果没有</,一定要手动设置type为text/html
       this.length = Buffer.byteLength(val);
       return;
     }
 
     // buffer
-    if (Buffer.isBuffer(val)) {
-      if (setType) this.type = 'bin';
+    if (Buffer.isBuffer(val)) {                      //如果返回buffer
+      if (setType) this.type = 'bin';                //设置type=bin(二进制)
       this.length = val.length;
       return;
     }
 
     // stream
-    if ('function' == typeof val.pipe) {
+    if ('function' == typeof val.pipe) {             //如果返回流
       onFinish(this.res, destroy.bind(null, val));
       ensureErrorHandler(val, this.ctx.onerror);
 
       // overwriting
-      if (null != original && original != val) this.remove('Content-Length');
+      if (null != original && original != val) this.remove('Content-Length');   //覆盖原来设置的流信息
 
-      if (setType) this.type = 'bin';
+      if (setType) this.type = 'bin';                //二进制
       return;
     }
 
-    // json
+    // json                                          //json
     this.remove('Content-Length');
     this.type = 'json';
   },
@@ -182,7 +182,7 @@ module.exports = {
    * @api public
    */
 
-  set length(n) {
+  set length(n) {                                        //设置返回长度
     this.set('Content-Length', n);
   },
 
@@ -193,12 +193,13 @@ module.exports = {
    * @api public
    */
 
-  get length() {
+  get length() {                                        //获得返回长度
     var len = this.header['content-length'];
     var body = this.body;
 
-    if (null == len) {
+    if (null == len) {                 //如果返回头没有content-length
       if (!body) return;
+      //分别处理几种不同的返回类型的返回长度
       if ('string' == typeof body) return Buffer.byteLength(body);
       if (Buffer.isBuffer(body)) return body.length;
       if (isJSON(body)) return Buffer.byteLength(JSON.stringify(body));
@@ -215,7 +216,7 @@ module.exports = {
    * @api public
    */
 
-  get headerSent() {
+  get headerSent() {                                 //检查 response header 是否已经发送，用于在发生错误时检查客户端是否被通知。
     return this.res.headersSent;
   },
 
@@ -226,7 +227,7 @@ module.exports = {
    * @api public
    */
 
-  vary: function(field){
+  vary: function(field){                              //相当于执行res.append('Vary', field)。
     vary(this.res, field);
   },
 
@@ -251,17 +252,17 @@ module.exports = {
 
   redirect: function(url, alt){
     // location
-    if ('back' == url) url = this.ctx.get('Referrer') || alt || '/';
-    this.set('Location', url);
+    if ('back' == url) url = this.ctx.get('Referrer') || alt || '/';        //如果url带有back,返回referrer页面
+    this.set('Location', url);                                              //设置location=url
 
     // status
-    if (!statuses.redirect[this.status]) this.status = 302;
+    if (!statuses.redirect[this.status]) this.status = 302;                  //设置重定向状态码302
 
     // html
-    if (this.ctx.accepts('html')) {
+    if (this.ctx.accepts('html')) {                                          //如果允许html
       url = escape(url);
       this.type = 'text/html; charset=utf-8';
-      this.body = 'Redirecting to <a href="' + url + '">' + url + '</a>.';
+      this.body = 'Redirecting to <a href="' + url + '">' + url + '</a>.';   //返回重定向html页面
       return;
     }
 
@@ -277,7 +278,7 @@ module.exports = {
    * @api public
    */
 
-  attachment: function(filename){
+  attachment: function(filename){                    //客户端下载
     if (filename) this.type = extname(filename);
     this.set('Content-Disposition', contentDisposition(filename));
   },
@@ -298,7 +299,7 @@ module.exports = {
    * @api public
    */
 
-  set type(type) {
+  set type(type) {                        //设置类型,如果有,设置,如果没有对应类型,移除
     type = getType(type) || false;
     if (type) {
       this.set('Content-Type', type);
@@ -317,7 +318,7 @@ module.exports = {
    * @api public
    */
 
-  set lastModified(val) {
+  set lastModified(val) {                //设置Last-Modifie
     if ('string' == typeof val) val = new Date(val);
     this.set('Last-Modified', val.toUTCString());
   },
@@ -346,7 +347,7 @@ module.exports = {
    * @api public
    */
 
-  set etag(val) {
+  set etag(val) {                        //设置etag
     if (!/^(W\/)?"/.test(val)) val = '"' + val + '"';
     this.set('ETag', val);
   },
@@ -358,7 +359,7 @@ module.exports = {
    * @api public
    */
 
-  get etag() {
+  get etag() {                            //获取缓存etag
     return this.get('ETag');
   },
 
@@ -385,7 +386,7 @@ module.exports = {
    * @api public
    */
 
-  is: function(types){
+  is: function(types){                //检查返回类型是否在types中
     var type = this.type;
     if (!types) return type || false;
     if (!Array.isArray(types)) types = [].slice.call(arguments);
@@ -427,12 +428,12 @@ module.exports = {
    * @api public
    */
 
-  set: function(field, val){
-    if (2 == arguments.length) {
+  set: function(field, val){            //设置头部信息
+    if (2 == arguments.length) {        //
       if (Array.isArray(val)) val = val.map(String);
       else val = String(val);
       this.res.setHeader(field, val);
-    } else {
+    } else {                            //如果传入是json
       for (var key in field) {
         this.set(key, field[key]);
       }
@@ -453,7 +454,7 @@ module.exports = {
    * @api public
    */
 
-  append: function(field, val){
+  append: function(field, val){     //调用设置方法,追加设置头部
     var prev = this.get(field);
 
     if (prev) {
@@ -472,7 +473,7 @@ module.exports = {
    * @api public
    */
 
-  remove: function(field){
+  remove: function(field){     //移除头部
     this.res.removeHeader(field);
   },
 
@@ -485,7 +486,7 @@ module.exports = {
    * @api private
    */
 
-  get writable() {
+  get writable() {             //如果套接字可写,返回true
     var socket = this.res.socket;
     if (!socket) return false;
     return socket.writable;
