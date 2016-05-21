@@ -226,7 +226,7 @@ module.exports = {
 
   get host() {
     var proxy = this.app.proxy;          //获得代理host
-    var host = proxy && this.get('X-Forwarded-Host');
+    var host = proxy && this.get('X-Forwarded-Host');  //获得请求IP
     host = host || this.get('Host');     //获得host
     if (!host) return '';
     return host.split(/\s*,\s*/)[0];
@@ -241,7 +241,7 @@ module.exports = {
    * @api public
    */
 
-  get hostname() {                      //设置host
+  get hostname() {                      //设置hostname
     var host = this.host;
     if (!host) return '';
     return host.split(':')[0];
@@ -256,15 +256,15 @@ module.exports = {
    * @api public
    */
 
-  get fresh() {
+  get fresh() {                         //检查请求缓存是否 "fresh"
     var method = this.method;
     var s = this.ctx.status;
 
     // GET or HEAD for weak freshness validation only
-    if ('GET' != method && 'HEAD' != method) return false;
+    if ('GET' != method && 'HEAD' != method) return false;     //只有get或者head方法才会有缓存,比如后端接口,都不会被缓存
 
     // 2xx or 304 as per rfc2616 14.26
-    if ((s >= 200 && s < 300) || 304 == s) {
+    if ((s >= 200 && s < 300) || 304 == s) {                   //状态码为200~300或者304,才会走缓存
       return fresh(this.header, this.ctx.response.header);
     }
 
@@ -280,7 +280,7 @@ module.exports = {
    * @api public
    */
 
-  get stale() {
+  get stale() {                                  //是否缓存
     return !this.fresh;
   },
 
@@ -292,7 +292,7 @@ module.exports = {
    */
 
   get idempotent() {
-    var methods = ['GET', 'HEAD', 'PUT', 'DELETE', 'OPTIONS', 'TRACE'];
+    var methods = ['GET', 'HEAD', 'PUT', 'DELETE', 'OPTIONS', 'TRACE'];     //幂等请求,除了POST都是
     return !!~methods.indexOf(this.method);
   },
 
@@ -303,7 +303,7 @@ module.exports = {
    * @api public
    */
 
-  get socket() {
+  get socket() {                                                             //获得套接字
     return this.req.socket;
   },
 
@@ -314,7 +314,7 @@ module.exports = {
    * @api public
    */
 
-  get charset() {
+  get charset() {                                                            //获得请求的Content-Type
     var type = this.get('Content-Type');
     if (!type) return '';
 
