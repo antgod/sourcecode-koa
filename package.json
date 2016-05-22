@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
-    "koa-body": "^1.4.0"
+    "koa-body": "^1.4.0",
+    "koa-router": "^5.4.0",
+    "koa-static": "^2.0.0"
   },
   "devDependencies": {},
   "scripts": {
